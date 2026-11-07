@@ -263,20 +263,14 @@ kbd {
 
       if (floor.complete && floor.naturalWidth) {
 
-        const floorHeight = 120;
-        const floorWidth = 200;
+        const floorHeight = 90;
+        const floorWidth = 260;
 
-        const start = -(backgroundOffset % floorWidth);
+const floorY = H - floorHeight;
 
-        for (
-          let x = start - floorWidth;
-          x < W + floorWidth;
-          x += floorWidth
-        ) {
-
-          ctx.drawImage(floor, x, H - floorHeight, floorWidth, floorHeight);
-
-        }
+for (let x = start - floorWidth; x < W + floorWidth; x += floorWidth) {
+    ctx.drawImage(floor, x, floorY, floorWidth, floorHeight);
+    }
 
       } else {
 
