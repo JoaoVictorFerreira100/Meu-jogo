@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#172554">
-  <title>Retro Runner</title>
+  <title>Sonic Retro Runner</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -47,7 +47,7 @@
 </head>
 <body>
   <main class="game-wrap">
-    <h1>RETRO RUNNER</h1>
+    <h1>SONIC RETRO RUNNER</h1>
     <p class="subtitle">Corra, desvie dos inimigos e tente bater seu recorde!</p>
 
     <section class="game-box" aria-label="Jogo Retro Runner">
@@ -57,7 +57,7 @@
         <span id="best">RECORDE: 0</span>
       </div>
       <div class="overlay" id="overlay">
-        <h2 id="overlayTitle">RETRO RUNNER</h2>
+        <h2 id="overlayTitle">SONIC RETRO RUNNER</h2>
         <p id="overlayText">Pule os inimigos do chão e tome cuidado com os que voam!</p>
         <button id="startButton">JOGAR</button>
       </div>
@@ -85,7 +85,7 @@
       images[name].src = src;
     };
     loadImage("background", "assets/background.jpg");
-    loadImage("player", "assets/player.gif");
+    loadImage("player", "assets/player.png");
     loadImage("ground", "assets/ground.png");
     loadImage("air", "assets/air.png");
 
