@@ -1,274 +1,618 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!DOCTYPE html><html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#172554">
   <title>Sonic Retro Runner</title>
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; min-height: 100vh; display: grid; place-items: center;
-      padding: 20px; background: linear-gradient(145deg, #101a3b, #253b70);
-      color: #fff; font-family: system-ui, Arial, sans-serif;
-    }
-    .game-wrap { width: min(100%, 980px); text-align: center; }
-    h1 { margin: 0 0 8px; font-size: clamp(25px, 5vw, 38px); letter-spacing: 2px; }
-    .subtitle { margin: 0 0 18px; color: #dbeafe; }
-    .game-box {
-      position: relative; overflow: hidden; border: 4px solid #fff;
-      border-radius: 14px; background: #79c8f4;
-      box-shadow: 0 18px 45px #0006;
-    }
-    canvas { display: block; width: 100%; height: auto; touch-action: manipulation; }
-    .hud {
-      position: absolute; top: 12px; left: 16px; right: 16px;
-      display: flex; justify-content: space-between; pointer-events: none;
-      color: #172554; font-weight: 800; text-shadow: 0 1px #fff9;
-      font-size: clamp(13px, 2.3vw, 18px);
-    }
-    .overlay {
-      position: absolute; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; gap: 10px;
-      padding: 20px; background: #07132dcc; text-align: center;
-    }
-    .overlay.hidden { display: none; }
-    .overlay h2 { margin: 0; font-size: clamp(28px, 6vw, 48px); }
-    .overlay p { margin: 0; color: #e0f2fe; }
-    button {
-      border: 0; border-radius: 9px; padding: 12px 24px; margin-top: 8px;
-      background: #facc15; color: #172554; font-size: 17px;
-      font-weight: 900; cursor: pointer; box-shadow: 0 4px 0 #b77905;
-    }
-    button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b77905; }
-    .instructions { margin: 16px 0 0; color: #e0e7ff; line-height: 1.6; }
-    kbd { padding: 2px 7px; border: 1px solid #cbd5e1; border-radius: 5px; background: #fff; color: #172554; }
+    * { box-sizing: border-box; }body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: linear-gradient(145deg, #101a3b, #253b70);
+  color: #fff;
+  font-family: system-ui, Arial, sans-serif;
+}
+
+.game-wrap {
+  width: min(100%, 980px);
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: clamp(25px, 5vw, 38px);
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  margin: 0 0 18px;
+  color: #dbeafe;
+}
+
+.game-box {
+  position: relative;
+  overflow: hidden;
+  border: 4px solid #fff;
+  border-radius: 14px;
+  background: #79c8f4;
+  box-shadow: 0 18px 45px #0006;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: manipulation;
+}
+
+.hud {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  color: #172554;
+  font-weight: 800;
+  text-shadow: 0 1px #fff9;
+  font-size: clamp(13px, 2.3vw, 18px);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  background: #07132dcc;
+  text-align: center;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay h2 {
+  margin: 0;
+  font-size: clamp(28px, 6vw, 48px);
+}
+
+.overlay p {
+  margin: 0;
+  color: #e0f2fe;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 12px 24px;
+  margin-top: 8px;
+  background: #facc15;
+  color: #172554;
+  font-size: 17px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #b77905;
+}
+
+button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #b77905;
+}
+
+.instructions {
+  margin: 16px 0 0;
+  color: #e0e7ff;
+  line-height: 1.6;
+}
+
+kbd {
+  padding: 2px 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  background: #fff;
+  color: #172554;
+}
+
   </style>
-</head>
-<body>
-  <main class="game-wrap">
-    <h1>SONIC RETRO RUNNER</h1>
-    <p class="subtitle">Corra, desvie dos inimigos e tente bater seu recorde!</p>
+</head><body>  <main class="game-wrap"><h1>SONIC RETRO RUNNER</h1>
 
-    <section class="game-box" aria-label="Jogo Retro Runner">
-      <canvas id="game" width="960" height="400"></canvas>
-      <div class="hud">
-        <span id="score">PONTOS: 0</span>
-        <span id="best">RECORDE: 0</span>
-      </div>
-      <div class="overlay" id="overlay">
-        <h2 id="overlayTitle">SONIC RETRO RUNNER</h2>
-        <p id="overlayText">Pule os inimigos do chão e tome cuidado com os que voam!</p>
-        <button id="startButton">JOGAR</button>
-      </div>
-    </section>
+<p class="subtitle">
+  Corra, desvie dos inimigos e tente bater seu recorde!
+</p>
 
-    <p class="instructions">
-      Pressione <kbd>ESPAÇO</kbd> ou <kbd>↑</kbd> para pular.
-      No celular, toque na tela. Ao perder, clique em <strong>JOGAR NOVAMENTE</strong>.
+<section class="game-box" aria-label="Jogo Retro Runner">
+
+  <canvas id="game" width="960" height="400"></canvas>
+
+  <div class="hud">
+    <span id="score">PONTOS: 0</span>
+    <span id="best">RECORDE: 0</span>
+  </div>
+
+  <div class="overlay" id="overlay">
+
+    <h2 id="overlayTitle">SONIC RETRO RUNNER</h2>
+
+    <p id="overlayText">
+      Pule os inimigos do chão e tome cuidado com os que voam!
     </p>
-  </main>
 
-  <script>
+    <button id="startButton">JOGAR</button>
+
+  </div>
+
+</section>
+
+<p class="instructions">
+  Pressione <kbd>ESPAÇO</kbd> ou <kbd>↑</kbd> para pular.
+  No celular, toque na tela. Ao perder, clique em
+  <strong>JOGAR NOVAMENTE</strong>.
+</p>
+
+  </main>  <script>
+
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+
     const overlay = document.getElementById("overlay");
     const overlayTitle = document.getElementById("overlayTitle");
     const overlayText = document.getElementById("overlayText");
     const startButton = document.getElementById("startButton");
+
     const scoreLabel = document.getElementById("score");
     const bestLabel = document.getElementById("best");
 
+    // CARREGAMENTO DAS IMAGENS
+
     const images = {};
+
     const loadImage = (name, src) => {
       images[name] = new Image();
       images[name].src = src;
     };
+
     loadImage("background", "assets/background.jpg");
     loadImage("player", "assets/player.png");
     loadImage("ground", "assets/ground.png");
     loadImage("air", "assets/air.png");
 
+    // CONFIGURAÇÕES DO JOGO
+
     const W = canvas.width;
     const H = canvas.height;
+
     const FLOOR = 330;
-    const player = { x: 105, y: FLOOR - 82, w: 82, h: 82, vy: 0, jumping: false };
+
+    const player = {
+      x: 105,
+      y: FLOOR - 82,
+      w: 82,
+      h: 82,
+      vy: 0,
+      jumping: false
+    };
+
     const GRAVITY = 0.72;
     const JUMP_FORCE = -15.5;
 
     let obstacles = [];
     let running = false;
     let gameOver = false;
+
     let score = 0;
     let speed = 6;
     let spawnTimer = 65;
+
     let backgroundOffset = 0;
     let lastTime = 0;
+
     let best = Number(localStorage.getItem("retroRunnerBest") || 0);
+
     bestLabel.textContent = "RECORDE: " + best;
 
-    // O cenário é desenhado em faixas contínuas e termina exatamente no chão.
+    // CENÁRIO E CHÃO
+
     function drawBackground() {
+
       const bg = images.background;
-      if (!bg.complete || !bg.naturalWidth) {
+      const ground = images.ground;
+
+      // DESENHA O CENÁRIO
+
+      if (bg.complete && bg.naturalWidth) {
+
+        const tileW = 510;
+        const tileH = 510;
+        const bgY = -155;
+
+        const start = -(backgroundOffset % tileW);
+
+        for (
+          let x = start - tileW;
+          x < W + tileW;
+          x += tileW
+        ) {
+
+          ctx.drawImage(
+            bg,
+            x,
+            bgY,
+            tileW,
+            tileH
+          );
+
+        }
+
+      } else {
+
         ctx.fillStyle = "#83d5ff";
-        ctx.fillRect(0, 0, W, H);
-        ctx.fillStyle = "#55a51d";
-        ctx.fillRect(0, FLOOR, W, H - FLOOR);
-        return;
+        ctx.fillRect(0, 0, W, FLOOR);
+
       }
 
-      const tileW = 510;
-      const tileH = 510;
-      const bgY = -155;
-      const start = -(backgroundOffset % tileW);
-      for (let x = start - tileW; x < W + tileW; x += tileW) {
-        ctx.drawImage(bg, x, bgY, tileW, tileH);
+      // DESENHA O CHÃO COM GROUND.PNG
+
+      if (ground.complete && ground.naturalWidth) {
+
+        const groundHeight = 70;
+        const groundWidth = 160;
+
+        const start = -(backgroundOffset % groundWidth);
+
+        for (
+          let x = start - groundWidth;
+          x < W + groundWidth;
+          x += groundWidth
+        ) {
+
+          ctx.drawImage(
+            ground,
+            x,
+            FLOOR,
+            groundWidth,
+            groundHeight
+          );
+
+        }
+
+      } else {
+
+        ctx.fillStyle = "#28651d";
+        ctx.fillRect(0, FLOOR, W, H - FLOOR);
+
       }
-      // Faixa de chão que cobre a borda inferior da imagem e fica alinhada.
-      ctx.fillStyle = "#28651d";
-      ctx.fillRect(0, FLOOR, W, H - FLOOR);
-      ctx.fillStyle = "#65c51f";
-      ctx.fillRect(0, FLOOR, W, 7);
+
     }
+
+    // PERSONAGEM
 
     function drawPlayer() {
+
       const img = images.player;
+
       if (img && img.complete && img.naturalWidth) {
-        ctx.drawImage(img, player.x, player.y, player.w, player.h);
+
+        ctx.drawImage(
+          img,
+          player.x,
+          player.y,
+          player.w,
+          player.h
+        );
+
       } else {
+
         ctx.fillStyle = "#0875e1";
-        ctx.fillRect(player.x + 10, player.y + 12, 55, 65);
+
+        ctx.fillRect(
+          player.x + 10,
+          player.y + 12,
+          55,
+          65
+        );
+
       }
+
     }
+
+    // INIMIGOS
 
     function drawObstacle(ob) {
+
       const img = images[ob.type];
+
       if (img && img.complete && img.naturalWidth) {
-        ctx.drawImage(img, ob.x, ob.y, ob.w, ob.h);
+
+        ctx.drawImage(
+          img,
+          ob.x,
+          ob.y,
+          ob.w,
+          ob.h
+        );
+
       } else {
+
         ctx.fillStyle = ob.type === "air" ? "#333" : "#e11d48";
-        ctx.fillRect(ob.x, ob.y, ob.w, ob.h);
+
+        ctx.fillRect(
+          ob.x,
+          ob.y,
+          ob.w,
+          ob.h
+        );
+
       }
+
     }
 
+    // REINICIAR JOGO
+
     function resetGame() {
+
       obstacles = [];
+
       score = 0;
       speed = 6;
       spawnTimer = 55;
+
       backgroundOffset = 0;
+
       player.y = FLOOR - player.h;
       player.vy = 0;
       player.jumping = false;
+
       gameOver = false;
       running = true;
+
       overlay.classList.add("hidden");
+
       scoreLabel.textContent = "PONTOS: 0";
+
       lastTime = performance.now();
+
       requestAnimationFrame(loop);
+
     }
+
+    // FIM DE JOGO
 
     function endGame() {
+
       running = false;
       gameOver = true;
+
       const finalScore = Math.floor(score);
+
       if (finalScore > best) {
+
         best = finalScore;
+
         localStorage.setItem("retroRunnerBest", best);
+
         bestLabel.textContent = "RECORDE: " + best;
+
       }
+
       overlayTitle.textContent = "FIM DE JOGO!";
-      overlayText.textContent = "Você fez " + finalScore + " pontos. Tente novamente!";
+
+      overlayText.textContent =
+        "Você fez " + finalScore + " pontos. Tente novamente!";
+
       startButton.textContent = "JOGAR NOVAMENTE";
+
       overlay.classList.remove("hidden");
+
     }
+
+    // PULO
 
     function jump() {
+
       if (!running) {
+
         if (!gameOver) resetGame();
+
         return;
+
       }
+
       if (!player.jumping) {
+
         player.vy = JUMP_FORCE;
         player.jumping = true;
+
       }
+
     }
+
+    // GERAR INIMIGOS
 
     function spawnObstacle() {
+
       const type = Math.random() < 0.34 ? "air" : "ground";
+
       if (type === "ground") {
-        obstacles.push({ type, x: W + 30, y: FLOOR - 72, w: 76, h: 72 });
+
+        obstacles.push({
+          type,
+          x: W + 30,
+          y: FLOOR - 72,
+          w: 76,
+          h: 72
+        });
+
       } else {
-        // Inimigo aéreo: sua altura faz com que o jogador não possa pular nele.
-        const heights = [FLOOR - 142, FLOOR - 174];
-        obstacles.push({ type, x: W + 30, y: heights[Math.floor(Math.random() * heights.length)], w: 78, h: 74 });
+
+        const heights = [
+          FLOOR - 142,
+          FLOOR - 174
+        ];
+
+        obstacles.push({
+          type,
+          x: W + 30,
+          y: heights[Math.floor(Math.random() * heights.length)],
+          w: 78,
+          h: 74
+        });
+
       }
+
       spawnTimer = 78 + Math.random() * 62;
+
     }
+
+    // COLISÃO
 
     function collides(a, b) {
-      // Caixas ligeiramente menores que os desenhos para uma colisão mais justa.
-      const ax = a.x + 13, ay = a.y + 12, aw = a.w - 26, ah = a.h - 20;
-      const bx = b.x + 12, by = b.y + 10, bw = b.w - 24, bh = b.h - 18;
-      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+
+      const ax = a.x + 13;
+      const ay = a.y + 12;
+      const aw = a.w - 26;
+      const ah = a.h - 20;
+
+      const bx = b.x + 12;
+      const by = b.y + 10;
+      const bw = b.w - 24;
+      const bh = b.h - 18;
+
+      return (
+        ax < bx + bw &&
+        ax + aw > bx &&
+        ay < by + bh &&
+        ay + ah > by
+      );
+
     }
 
+    // ATUALIZAÇÃO DO JOGO
+
     function update(dt) {
+
       const step = Math.min(dt / 16.67, 2.2);
+
       score += step * 0.12;
+
       speed = Math.min(12, 6 + score / 180);
+
       backgroundOffset += speed * step * 0.65;
+
+      // GRAVIDADE
 
       player.vy += GRAVITY * step;
       player.y += player.vy * step;
+
       if (player.y >= FLOOR - player.h) {
+
         player.y = FLOOR - player.h;
         player.vy = 0;
         player.jumping = false;
+
       }
+
+      // GERAR OBSTÁCULOS
 
       spawnTimer -= step;
-      if (spawnTimer <= 0) spawnObstacle();
+
+      if (spawnTimer <= 0) {
+        spawnObstacle();
+      }
+
+      // MOVIMENTAR OBSTÁCULOS
 
       for (const ob of obstacles) {
+
         ob.x -= speed * step;
+
         if (collides(player, ob)) {
+
           endGame();
+
           return;
+
         }
+
       }
-      obstacles = obstacles.filter(ob => ob.x + ob.w > -20);
+
+      obstacles = obstacles.filter(
+        ob => ob.x + ob.w > -20
+      );
+
       scoreLabel.textContent = "PONTOS: " + Math.floor(score);
+
     }
+
+    // DESENHAR ELEMENTOS
 
     function render() {
+
       drawBackground();
-      for (const ob of obstacles) drawObstacle(ob);
+
+      for (const ob of obstacles) {
+        drawObstacle(ob);
+      }
+
       drawPlayer();
+
     }
+
+    // LOOP PRINCIPAL
 
     function loop(now) {
+
       if (!running) return;
+
       const dt = now - lastTime;
+
       lastTime = now;
+
       update(dt);
+
       render();
-      if (running) requestAnimationFrame(loop);
+
+      if (running) {
+        requestAnimationFrame(loop);
+      }
+
     }
 
+    // CONTROLES
+
     startButton.addEventListener("click", resetGame);
+
     canvas.addEventListener("pointerdown", jump);
+
     window.addEventListener("keydown", event => {
-      if (event.code === "Space" || event.code === "ArrowUp") {
+
+      if (
+        event.code === "Space" ||
+        event.code === "ArrowUp"
+      ) {
+
         event.preventDefault();
-        if (!running && !gameOver) resetGame();
-        else jump();
+
+        if (!running && !gameOver) {
+          resetGame();
+        } else {
+          jump();
+        }
+
       }
+
     });
 
-    // Tela inicial.
+    // TELA INICIAL
+
     render();
-  </script>
-</body>
-</html>
+
+  </script></body>
+                                         </html>
