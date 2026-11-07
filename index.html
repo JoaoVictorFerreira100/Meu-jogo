@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -137,36 +138,36 @@ kbd {
 <h1>SONIC RETRO RUNNER</h1>
 
 <p class="subtitle">
-  Corra, desvie dos inimigos e tente bater seu recorde!
+Corra, desvie dos inimigos e tente bater seu recorde!
 </p>
 
 <section class="game-box" aria-label="Jogo Retro Runner">
 
-  <canvas id="game" width="960" height="400"></canvas>
+<canvas id="game" width="960" height="400"></canvas>
 
-  <div class="hud">
-    <span id="score">PONTOS: 0</span>
-    <span id="best">RECORDE: 0</span>
-  </div>
+<div class="hud">
+<span id="score">PONTOS: 0</span>
+<span id="best">RECORDE: 0</span>
+</div>
 
-  <div class="overlay" id="overlay">
+<div class="overlay" id="overlay">
 
-    <h2 id="overlayTitle">SONIC RETRO RUNNER</h2>
+<h2 id="overlayTitle">SONIC RETRO RUNNER</h2>
 
-    <p id="overlayText">
-      Pule os inimigos do chão e tome cuidado com os que voam!
-    </p>
+<p id="overlayText">
+Pule os inimigos do chão e tome cuidado com os que voam!
+</p>
 
-    <button id="startButton">JOGAR</button>
+<button id="startButton">JOGAR</button>
 
-  </div>
+</div>
 
 </section>
 
 <p class="instructions">
-  Pressione <kbd>ESPAÇO</kbd> ou <kbd>↑</kbd> para pular.
-  No celular, toque na tela. Ao perder, clique em
-  <strong>JOGAR NOVAMENTE</strong>.
+Pressione <kbd>ESPAÇO</kbd> ou <kbd>↑</kbd> para pular.
+No celular, toque na tela. Ao perder, clique em
+<strong>JOGAR NOVAMENTE</strong>.
 </p>
 
 </main>
@@ -191,10 +192,8 @@ const bestLabel = document.getElementById("best");
 const images = {};
 
 function loadImage(name, src) {
-
   images[name] = new Image();
   images[name].src = src;
-
 }
 
 loadImage("background", "assets/background.jpg");
@@ -243,7 +242,7 @@ bestLabel.textContent = "RECORDE: " + best;
 function drawBackground() {
 
   const bg = images.background;
-  const ground = images.ground;
+  const floor = images.floor;
 
   // CENÁRIO
 
@@ -278,29 +277,29 @@ function drawBackground() {
 
   }
 
-  // CHÃO
+  // CHÃO UTILIZANDO FLOOR.PNG
 
-  if (ground.complete && ground.naturalWidth) {
+  if (floor.complete && floor.naturalWidth) {
 
-    const groundHeight = 90;
-    const groundWidth = 260;
+    const floorHeight = 90;
+    const floorWidth = 260;
 
-    const groundY = H - groundHeight;
+    const floorY = H - floorHeight;
 
-    const start = -(backgroundOffset % groundWidth);
+    const start = -(backgroundOffset % floorWidth);
 
     for (
-      let x = start - groundWidth;
-      x < W + groundWidth;
-      x += groundWidth
+      let x = start - floorWidth;
+      x < W + floorWidth;
+      x += floorWidth
     ) {
 
       ctx.drawImage(
-        ground,
+        floor,
         x,
-        groundY,
-        groundWidth,
-        groundHeight
+        floorY,
+        floorWidth,
+        floorHeight
       );
 
     }
@@ -462,14 +461,15 @@ function jump() {
 
 function spawnObstacle() {
 
-  const type = Math.random() < 0.34 ? "air" : "floor";
+  const type = Math.random() < 0.34 ? "air" : "ground";
 
-  if (type === "floor") {
+  // OBSTÁCULO TERRESTRE: GROUND.PNG
+
+  if (type === "ground") {
 
     obstacles.push({
 
-      type,
-
+      type: "ground",
       x: W + 30,
       y: FLOOR - 72,
       w: 76,
@@ -477,7 +477,11 @@ function spawnObstacle() {
 
     });
 
-  } else {
+  }
+
+  // OBSTÁCULO AÉREO: AIR.PNG
+
+  else {
 
     const heights = [
       FLOOR - 142,
@@ -486,7 +490,7 @@ function spawnObstacle() {
 
     obstacles.push({
 
-      type,
+      type: "air",
 
       x: W + 30,
 
@@ -520,17 +524,15 @@ function collides(a, b) {
   const bh = b.h - 18;
 
   return (
-
     ax < bx + bw &&
     ax + aw > bx &&
     ay < by + bh &&
     ay + ah > by
-
   );
 
 }
 
-// ATUALIZAÇÃO
+// ATUALIZAÇÃO DO JOGO
 
 function update(dt) {
 
@@ -572,7 +574,6 @@ function update(dt) {
     if (collides(player, ob)) {
 
       endGame();
-
       return;
 
     }
