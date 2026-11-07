@@ -1,11 +1,18 @@
-<!DOCTYPE html><html lang="pt-BR">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#172554">
-  <title>Sonic Retro Runner</title>
-  <style>
-    * { box-sizing: border-box; }body {
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#172554">
+
+<title>Sonic Retro Runner</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
   margin: 0;
   min-height: 100vh;
   display: grid;
@@ -120,9 +127,14 @@ kbd {
   background: #fff;
   color: #172554;
 }
+</style>
+</head>
 
-  </style>
-</head><body>  <main class="game-wrap"><h1>SONIC RETRO RUNNER</h1>
+<body>
+
+<main class="game-wrap">
+
+<h1>SONIC RETRO RUNNER</h1>
 
 <p class="subtitle">
   Corra, desvie dos inimigos e tente bater seu recorde!
@@ -157,451 +169,490 @@ kbd {
   <strong>JOGAR NOVAMENTE</strong>.
 </p>
 
-  </main>  <script>
+</main>
 
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
+<script>
 
-    const overlay = document.getElementById("overlay");
-    const overlayTitle = document.getElementById("overlayTitle");
-    const overlayText = document.getElementById("overlayText");
-    const startButton = document.getElementById("startButton");
+// ELEMENTOS
 
-    const scoreLabel = document.getElementById("score");
-    const bestLabel = document.getElementById("best");
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-    // CARREGAMENTO DAS IMAGENS
+const overlay = document.getElementById("overlay");
+const overlayTitle = document.getElementById("overlayTitle");
+const overlayText = document.getElementById("overlayText");
+const startButton = document.getElementById("startButton");
 
-    const images = {};
+const scoreLabel = document.getElementById("score");
+const bestLabel = document.getElementById("best");
 
-    const loadImage = (name, src) => {
-      images[name] = new Image();
-      images[name].src = src;
-    };
+// CARREGAMENTO DAS IMAGENS
 
-    loadImage("background", "assets/background.jpg");
-    loadImage("player", "assets/player.png");
-    loadImage("floor", "assets/floor.png");
-    loadImage("ground", "assets/ground.png");
-    loadImage("air", "assets/air.png");
+const images = {};
 
-    // CONFIGURAÇÕES DO JOGO
+function loadImage(name, src) {
 
-    const W = canvas.width;
-    const H = canvas.height;
+  images[name] = new Image();
+  images[name].src = src;
 
-    const FLOOR = 330;
+}
 
-    const player = {
-      x: 105,
-      y: FLOOR - 82,
-      w: 82,
-      h: 82,
-      vy: 0,
-      jumping: false
-    };
+loadImage("background", "assets/background.jpg");
+loadImage("player", "assets/player.png");
+loadImage("floor", "assets/floor.png");
+loadImage("ground", "assets/ground.png");
+loadImage("air", "assets/air.png");
 
-    const GRAVITY = 0.72;
-    const JUMP_FORCE = -15.5;
+// CONFIGURAÇÕES
 
-    let obstacles = [];
-    let running = false;
-    let gameOver = false;
+const W = canvas.width;
+const H = canvas.height;
 
-    let score = 0;
-    let speed = 6;
-    let spawnTimer = 65;
+const FLOOR = 330;
 
-    let backgroundOffset = 0;
-    let lastTime = 0;
+const player = {
+  x: 105,
+  y: FLOOR - 82,
+  w: 82,
+  h: 82,
+  vy: 0,
+  jumping: false
+};
 
-    let best = Number(localStorage.getItem("retroRunnerBest") || 0);
+const GRAVITY = 0.72;
+const JUMP_FORCE = -15.5;
+
+let obstacles = [];
+
+let running = false;
+let gameOver = false;
+
+let score = 0;
+let speed = 6;
+let spawnTimer = 65;
+
+let backgroundOffset = 0;
+let lastTime = 0;
+
+let best = Number(localStorage.getItem("retroRunnerBest") || 0);
+
+bestLabel.textContent = "RECORDE: " + best;
+
+// CENÁRIO E CHÃO
+
+function drawBackground() {
+
+  const bg = images.background;
+  const ground = images.ground;
+
+  // CENÁRIO
+
+  if (bg.complete && bg.naturalWidth) {
+
+    const tileW = 510;
+    const tileH = 510;
+    const bgY = -155;
+
+    const start = -(backgroundOffset % tileW);
+
+    for (
+      let x = start - tileW;
+      x < W + tileW;
+      x += tileW
+    ) {
+
+      ctx.drawImage(
+        bg,
+        x,
+        bgY,
+        tileW,
+        tileH
+      );
+
+    }
+
+  } else {
+
+    ctx.fillStyle = "#83d5ff";
+    ctx.fillRect(0, 0, W, FLOOR);
+
+  }
+
+  // CHÃO
+
+  if (ground.complete && ground.naturalWidth) {
+
+    const groundHeight = 90;
+    const groundWidth = 260;
+
+    const groundY = H - groundHeight;
+
+    const start = -(backgroundOffset % groundWidth);
+
+    for (
+      let x = start - groundWidth;
+      x < W + groundWidth;
+      x += groundWidth
+    ) {
+
+      ctx.drawImage(
+        ground,
+        x,
+        groundY,
+        groundWidth,
+        groundHeight
+      );
+
+    }
+
+  } else {
+
+    ctx.fillStyle = "#28651d";
+    ctx.fillRect(0, FLOOR, W, H - FLOOR);
+
+  }
+
+}
+
+// PERSONAGEM
+
+function drawPlayer() {
+
+  const img = images.player;
+
+  if (img && img.complete && img.naturalWidth) {
+
+    ctx.drawImage(
+      img,
+      player.x,
+      player.y,
+      player.w,
+      player.h
+    );
+
+  } else {
+
+    ctx.fillStyle = "#0875e1";
+
+    ctx.fillRect(
+      player.x + 10,
+      player.y + 12,
+      55,
+      65
+    );
+
+  }
+
+}
+
+// OBSTÁCULOS
+
+function drawObstacle(ob) {
+
+  const img = images[ob.type];
+
+  if (img && img.complete && img.naturalWidth) {
+
+    ctx.drawImage(
+      img,
+      ob.x,
+      ob.y,
+      ob.w,
+      ob.h
+    );
+
+  } else {
+
+    ctx.fillStyle = ob.type === "air" ? "#333" : "#e11d48";
+
+    ctx.fillRect(
+      ob.x,
+      ob.y,
+      ob.w,
+      ob.h
+    );
+
+  }
+
+}
+
+// REINICIAR JOGO
+
+function resetGame() {
+
+  obstacles = [];
+
+  score = 0;
+  speed = 6;
+  spawnTimer = 55;
+
+  backgroundOffset = 0;
+
+  player.y = FLOOR - player.h;
+  player.vy = 0;
+  player.jumping = false;
+
+  gameOver = false;
+  running = true;
+
+  overlay.classList.add("hidden");
+
+  scoreLabel.textContent = "PONTOS: 0";
+
+  lastTime = performance.now();
+
+  requestAnimationFrame(loop);
+
+}
+
+// FIM DE JOGO
+
+function endGame() {
+
+  running = false;
+  gameOver = true;
+
+  const finalScore = Math.floor(score);
+
+  if (finalScore > best) {
+
+    best = finalScore;
+
+    localStorage.setItem("retroRunnerBest", best);
 
     bestLabel.textContent = "RECORDE: " + best;
 
-    // CENÁRIO E CHÃO
+  }
 
-    function drawBackground() {
+  overlayTitle.textContent = "FIM DE JOGO!";
 
-      const bg = images.background;
-      const floor = images.floor;
+  overlayText.textContent =
+    "Você fez " + finalScore + " pontos. Tente novamente!";
 
-      // DESENHA O CENÁRIO
+  startButton.textContent = "JOGAR NOVAMENTE";
 
-      if (bg.complete && bg.naturalWidth) {
+  overlay.classList.remove("hidden");
 
-        const tileW = 510;
-        const tileH = 510;
-        const bgY = -155;
+}
 
-        const start = -(backgroundOffset % tileW);
+// PULO
 
-        for (
-          let x = start - tileW;
-          x < W + tileW;
-          x += tileW
-        ) {
+function jump() {
 
-          ctx.drawImage(
-            bg,
-            x,
-            bgY,
-            tileW,
-            tileH
-          );
+  if (!running) {
 
-        }
-
-      } else {
-
-        ctx.fillStyle = "#83d5ff";
-        ctx.fillRect(0, 0, W, FLOOR);
-
-      }
-
-      // DESENHA O CHÃO COM FLOOR.PNG
-
-      if (floor.complete && floor.naturalWidth) {
-
-        const floorHeight = 90;
-        const floorWidth = 260;
-
-const floorY = H - floorHeight;
-
-for (let x = start - floorWidth; x < W + floorWidth; x += floorWidth) {
-    ctx.drawImage(floor, x, floorY, floorWidth, floorHeight);
+    if (!gameOver) {
+      resetGame();
     }
 
-      } else {
+    return;
 
-        ctx.fillStyle = "#28651d";
-        ctx.fillRect(0, FLOOR, W, H - FLOOR);
+  }
 
-      }
+  if (!player.jumping) {
 
-    }
+    player.vy = JUMP_FORCE;
+    player.jumping = true;
 
-    // PERSONAGEM
+  }
 
-    function drawPlayer() {
+}
 
-      const img = images.player;
+// GERAR INIMIGOS
 
-      if (img && img.complete && img.naturalWidth) {
+function spawnObstacle() {
 
-        ctx.drawImage(
-          img,
-          player.x,
-          player.y,
-          player.w,
-          player.h
-        );
+  const type = Math.random() < 0.34 ? "air" : "floor";
 
-      } else {
+  if (type === "floor") {
 
-        ctx.fillStyle = "#0875e1";
+    obstacles.push({
 
-        ctx.fillRect(
-          player.x + 10,
-          player.y + 12,
-          55,
-          65
-        );
+      type,
 
-      }
-
-    }
-
-    // INIMIGOS
-
-    function drawObstacle(ob) {
-
-      const img = images[ob.type];
-
-      if (img && img.complete && img.naturalWidth) {
-
-        ctx.drawImage(
-          img,
-          ob.x,
-          ob.y,
-          ob.w,
-          ob.h
-        );
-
-      } else {
-
-        ctx.fillStyle = ob.type === "air" ? "#333" : "#e11d48";
-
-        ctx.fillRect(
-          ob.x,
-          ob.y,
-          ob.w,
-          ob.h
-        );
-
-      }
-
-    }
-
-    // REINICIAR JOGO
-
-    function resetGame() {
-
-      obstacles = [];
-
-      score = 0;
-      speed = 6;
-      spawnTimer = 55;
-
-      backgroundOffset = 0;
-
-      player.y = FLOOR - player.h;
-      player.vy = 0;
-      player.jumping = false;
-
-      gameOver = false;
-      running = true;
-
-      overlay.classList.add("hidden");
-
-      scoreLabel.textContent = "PONTOS: 0";
-
-      lastTime = performance.now();
-
-      requestAnimationFrame(loop);
-
-    }
-
-    // FIM DE JOGO
-
-    function endGame() {
-
-      running = false;
-      gameOver = true;
-
-      const finalScore = Math.floor(score);
-
-      if (finalScore > best) {
-
-        best = finalScore;
-
-        localStorage.setItem("retroRunnerBest", best);
-
-        bestLabel.textContent = "RECORDE: " + best;
-
-      }
-
-      overlayTitle.textContent = "FIM DE JOGO!";
-
-      overlayText.textContent =
-        "Você fez " + finalScore + " pontos. Tente novamente!";
-
-      startButton.textContent = "JOGAR NOVAMENTE";
-
-      overlay.classList.remove("hidden");
-
-    }
-
-    // PULO
-
-    function jump() {
-
-      if (!running) {
-
-        if (!gameOver) resetGame();
-
-        return;
-
-      }
-
-      if (!player.jumping) {
-
-        player.vy = JUMP_FORCE;
-        player.jumping = true;
-
-      }
-
-    }
-
-    // GERAR INIMIGOS
-
-    function spawnObstacle() {
-
-      const type = Math.random() < 0.34 ? "air" : "ground";
-
-      if (type === "ground") {
-
-        obstacles.push({
-          type,
-          x: W + 30,
-          y: FLOOR - 72,
-          w: 76,
-          h: 72
-        });
-
-      } else {
-
-        const heights = [
-          FLOOR - 142,
-          FLOOR - 174
-        ];
-
-        obstacles.push({
-          type,
-          x: W + 30,
-          y: heights[Math.floor(Math.random() * heights.length)],
-          w: 78,
-          h: 74
-        });
-
-      }
-
-      spawnTimer = 78 + Math.random() * 62;
-
-    }
-
-    // COLISÃO
-
-    function collides(a, b) {
-
-      const ax = a.x + 13;
-      const ay = a.y + 12;
-      const aw = a.w - 26;
-      const ah = a.h - 20;
-
-      const bx = b.x + 12;
-      const by = b.y + 10;
-      const bw = b.w - 24;
-      const bh = b.h - 18;
-
-      return (
-        ax < bx + bw &&
-        ax + aw > bx &&
-        ay < by + bh &&
-        ay + ah > by
-      );
-
-    }
-
-    // ATUALIZAÇÃO DO JOGO
-
-    function update(dt) {
-
-      const step = Math.min(dt / 16.67, 2.2);
-
-      score += step * 0.12;
-
-      speed = Math.min(12, 6 + score / 180);
-
-      backgroundOffset += speed * step * 0.65;
-
-      // GRAVIDADE
-
-      player.vy += GRAVITY * step;
-      player.y += player.vy * step;
-
-      if (player.y >= FLOOR - player.h) {
-
-        player.y = FLOOR - player.h;
-        player.vy = 0;
-        player.jumping = false;
-
-      }
-
-      // GERAR OBSTÁCULOS
-
-      spawnTimer -= step;
-
-      if (spawnTimer <= 0) {
-        spawnObstacle();
-      }
-
-      // MOVIMENTAR OBSTÁCULOS
-
-      for (const ob of obstacles) {
-
-        ob.x -= speed * step;
-
-        if (collides(player, ob)) {
-
-          endGame();
-
-          return;
-
-        }
-
-      }
-
-      obstacles = obstacles.filter(
-        ob => ob.x + ob.w > -20
-      );
-
-      scoreLabel.textContent = "PONTOS: " + Math.floor(score);
-
-    }
-
-    // DESENHAR ELEMENTOS
-
-    function render() {
-
-      drawBackground();
-
-      for (const ob of obstacles) {
-        drawObstacle(ob);
-      }
-
-      drawPlayer();
-
-    }
-
-    // LOOP PRINCIPAL
-
-    function loop(now) {
-
-      if (!running) return;
-
-      const dt = now - lastTime;
-
-      lastTime = now;
-
-      update(dt);
-
-      render();
-
-      if (running) {
-        requestAnimationFrame(loop);
-      }
-
-    }
-
-    // CONTROLES
-
-    startButton.addEventListener("click", resetGame);
-
-    canvas.addEventListener("pointerdown", jump);
-
-    window.addEventListener("keydown", event => {
-
-      if (
-        event.code === "Space" ||
-        event.code === "ArrowUp"
-      ) {
-
-        event.preventDefault();
-
-        if (!running && !gameOver) {
-          resetGame();
-        } else {
-          jump();
-        }
-
-      }
+      x: W + 30,
+      y: FLOOR - 72,
+      w: 76,
+      h: 72
 
     });
 
-    // TELA INICIAL
+  } else {
 
-    render();
+    const heights = [
+      FLOOR - 142,
+      FLOOR - 174
+    ];
 
-  </script></body>
-    </html>
+    obstacles.push({
+
+      type,
+
+      x: W + 30,
+
+      y: heights[
+        Math.floor(Math.random() * heights.length)
+      ],
+
+      w: 78,
+      h: 74
+
+    });
+
+  }
+
+  spawnTimer = 78 + Math.random() * 62;
+
+}
+
+// COLISÃO
+
+function collides(a, b) {
+
+  const ax = a.x + 13;
+  const ay = a.y + 12;
+  const aw = a.w - 26;
+  const ah = a.h - 20;
+
+  const bx = b.x + 12;
+  const by = b.y + 10;
+  const bw = b.w - 24;
+  const bh = b.h - 18;
+
+  return (
+
+    ax < bx + bw &&
+    ax + aw > bx &&
+    ay < by + bh &&
+    ay + ah > by
+
+  );
+
+}
+
+// ATUALIZAÇÃO
+
+function update(dt) {
+
+  const step = Math.min(dt / 16.67, 2.2);
+
+  score += step * 0.12;
+
+  speed = Math.min(12, 6 + score / 180);
+
+  backgroundOffset += speed * step * 0.65;
+
+  // GRAVIDADE
+
+  player.vy += GRAVITY * step;
+  player.y += player.vy * step;
+
+  if (player.y >= FLOOR - player.h) {
+
+    player.y = FLOOR - player.h;
+    player.vy = 0;
+    player.jumping = false;
+
+  }
+
+  // GERAR OBSTÁCULOS
+
+  spawnTimer -= step;
+
+  if (spawnTimer <= 0) {
+    spawnObstacle();
+  }
+
+  // MOVIMENTAR OBSTÁCULOS
+
+  for (const ob of obstacles) {
+
+    ob.x -= speed * step;
+
+    if (collides(player, ob)) {
+
+      endGame();
+
+      return;
+
+    }
+
+  }
+
+  // REMOVER OBSTÁCULOS FORA DA TELA
+
+  obstacles = obstacles.filter(
+    ob => ob.x + ob.w > -20
+  );
+
+  scoreLabel.textContent = "PONTOS: " + Math.floor(score);
+
+}
+
+// DESENHAR ELEMENTOS
+
+function render() {
+
+  drawBackground();
+
+  for (const ob of obstacles) {
+    drawObstacle(ob);
+  }
+
+  drawPlayer();
+
+}
+
+// LOOP PRINCIPAL
+
+function loop(now) {
+
+  if (!running) return;
+
+  const dt = now - lastTime;
+
+  lastTime = now;
+
+  update(dt);
+
+  render();
+
+  if (running) {
+    requestAnimationFrame(loop);
+  }
+
+}
+
+// CONTROLES
+
+startButton.addEventListener("click", resetGame);
+
+canvas.addEventListener("pointerdown", jump);
+
+window.addEventListener("keydown", event => {
+
+  if (
+    event.code === "Space" ||
+    event.code === "ArrowUp"
+  ) {
+
+    event.preventDefault();
+
+    if (!running && !gameOver) {
+      resetGame();
+    } else {
+      jump();
+    }
+
+  }
+
+});
+
+// TELA INICIAL
+
+render();
+
+</script>
+
+</body>
+  </html>
