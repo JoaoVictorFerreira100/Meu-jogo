@@ -181,6 +181,7 @@ kbd {
 
     loadImage("background", "assets/background.jpg");
     loadImage("player", "assets/player.png");
+    loadImage("floor", "assets/floor.png");
     loadImage("ground", "assets/ground.png");
     loadImage("air", "assets/air.png");
 
@@ -223,7 +224,7 @@ kbd {
     function drawBackground() {
 
       const bg = images.background;
-      const ground = images.ground;
+      const floor = images.floor;
 
       // DESENHA O CENÁRIO
 
@@ -258,27 +259,27 @@ kbd {
 
       }
 
-      // DESENHA O CHÃO COM GROUND.PNG
+      // DESENHA O CHÃO COM FLOOR.PNG
 
-      if (ground.complete && ground.naturalWidth) {
+      if (floor.complete && floor.naturalWidth) {
 
-        const groundHeight = 70;
-        const groundWidth = 160;
+        const floorHeight = 70;
+        const floorWidth = 160;
 
-        const start = -(backgroundOffset % groundWidth);
+        const start = -(backgroundOffset % floorWidth);
 
         for (
-          let x = start - groundWidth;
-          x < W + groundWidth;
-          x += groundWidth
+          let x = start - floorWidth;
+          x < W + floorWidth;
+          x += floorWidth
         ) {
 
           ctx.drawImage(
-            ground,
+            floor,
             x,
             FLOOR,
-            groundWidth,
-            groundHeight
+            floorWidth,
+            floorHeight
           );
 
         }
@@ -615,4 +616,4 @@ kbd {
     render();
 
   </script></body>
-                                         </html>
+    </html>
