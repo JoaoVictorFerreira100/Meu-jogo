@@ -1,4 +1,4 @@
-Retro Runner
+Sonic Retro Runner
 
 Por João Victor Ferreira
 
